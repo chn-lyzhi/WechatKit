@@ -8,7 +8,52 @@
 
 // MARK: Share
 
+public enum ShareContent {
+    case Text(text: String)
+    case Image(image: Data, messageExt: String, action: String, thumbImage: UIImage)
+    case LinkURL(urlString: String, title: String, description: String, thumbImage: UIImage)
+    case MusicURL(musicURL: String, dataURL: String, title: String, description: String, thumbImage: UIImage)
+    case VideoURL(videoURL: String, title: String, description: String, thumbImage: UIImage)
+    case WXMediaMessage(WXMediaMessage)
+}
+extension ShareContent {
+    fileprivate func getReq(_ scence: WXScene) -> SendMessageToWXReq {
+        let req = SendMessageToWXReq()
+        req.scene = Int32(scence.rawValue)
+        req.bText = false
+        switch self {
+        case let .Text(text):
+            req.text = text
+            req.bText = true
+        case let .Image(image, messageExt, action, thumbImage):
+            break
+        case let .LinkURL(urlString, title, description, thumbImage):
+            break
+        case let .MusicURL(musicURL, dataURL, title, description, thumbImage):
+            break
+        case let .VideoURL(videoURL, title, description, thumbImage):
+            break
+        case .WXMediaMessage(let wxmm):
+            req.message = wxmm
+        }
+        return req
+    }
+}
+
 extension WechatManager {
+    
+    /// 微信分享
+    ///
+    /// - Parameters:
+    ///   - scence: 分享场景
+    ///   - shareContent: 分享内容
+    ///   - completionHandler: 分享成功与否回调
+    /// **⚠️目前仅实现分享Text消息
+    public func share(_ scence: WXScene, _ shareContent: ShareContent, completionHandler: AuthHandle? = nil) {
+        self.completionHandler = completionHandler
+        WXApi.send(shareContent.getReq(scence))
+    }
+
     /**
     分享
 

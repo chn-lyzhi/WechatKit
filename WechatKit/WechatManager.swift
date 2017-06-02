@@ -126,6 +126,14 @@ extension WechatManager: WXApiDelegate {
                 break
             }
         }
+        if let temp = resp as? SendMessageToWXResp {
+            switch temp.errCode {
+            case WXSuccess.rawValue:
+                completionHandler(.success(["country": temp.country, "lang": temp.lang]))
+            default:
+                completionHandler(.failure(temp.errCode))
+            }
+        }
     }
 
 }

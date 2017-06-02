@@ -70,7 +70,15 @@ class ViewController: UIViewController {
      - parameter sender: sender description
      */
     @IBAction func share(_ sender: AnyObject) {
-        WechatManager.shared.share(WXSceneSession, image: nil, title: "test", description: "@WechatKit")
+        WechatManager.shared.share(WXSceneSession, .Text(text: "test")) { (result) in
+            switch result {
+            case .success(_):
+                print("分享成功")
+            case .failure(let e):
+                print(e.description)
+            }
+        }
+//        WechatManager.shared.share(WXSceneSession, image: nil, title: "test", description: "@WechatKit")
     }
     
     
