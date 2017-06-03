@@ -14,7 +14,7 @@ public enum ShareContent {
     case LinkURL(urlString: String, title: String, description: String, thumbImage: UIImage)
     case MusicURL(musicURL: String, dataURL: String, title: String, description: String, thumbImage: UIImage)
     case VideoURL(videoURL: String, title: String, description: String, thumbImage: UIImage)
-    case WXMediaMessage(WXMediaMessage)
+    case mediaMessage(WXMediaMessage)
 }
 extension ShareContent {
     fileprivate func getReq(_ scence: WXScene) -> SendMessageToWXReq {
@@ -28,15 +28,73 @@ extension ShareContent {
         case let .Image(image, messageExt, action, thumbImage):
             break
         case let .LinkURL(urlString, title, description, thumbImage):
+            let msg = ShareContent.getRequestMesage(thumbImage, title: title, description: description)
+            msg.mediaTagName = "WECHAT_TAG_JUMP_SHOWRANK"
+            let ext = WXWebpageObject()
+            ext.webpageUrl = urlString
+            msg.mediaObject = ext
+            req.message = msg
             break
         case let .MusicURL(musicURL, dataURL, title, description, thumbImage):
             break
         case let .VideoURL(videoURL, title, description, thumbImage):
             break
-        case .WXMediaMessage(let wxmm):
+        case .mediaMessage(let wxmm):
             req.message = wxmm
         }
         return req
+    }
+}
+
+extension ShareContent {
+    static func getRequestMesage(_ image: UIImage?, title: String, description: String)
+        -> WXMediaMessage {
+        let message = WXMediaMessage()
+        /** 描述内容
+         * @note 长度不能超过1K
+         */
+        if description.characters.count > 128 {
+            
+            let startIndex = description.startIndex
+            let to = description.index(after: description.index(startIndex, offsetBy: 128))
+            
+            message.description = description.substring(to: to)
+        } else {
+            message.description = description
+        }
+        
+        /** 缩略图数据
+         * @note 大小不能超过32K
+         */
+        let thumbImage = image == nil ? UIImage() : self.resizeImage(image!, newWidth: 100)
+        
+        message.setThumbImage(thumbImage)
+        
+        /** 标题
+         * @note 长度不能超过512字节
+         */
+        if title.characters.count > 64 {
+            
+            let startIndex = title.startIndex
+            let to = title.index(after: title.index(startIndex, offsetBy: 64))
+            
+            message.title = title.substring(to: to)
+        } else {
+            message.title = title
+        }
+        
+        return message
+    }
+    
+    static func resizeImage(_ image: UIImage, newWidth: CGFloat) -> UIImage {
+        
+        let newHeight = image.size.height / image.size.width * newWidth
+        UIGraphicsBeginImageContext( CGSize(width: newWidth, height: newHeight) )
+        image.draw(in: CGRect(x: 0, y: 0, width: newWidth, height: newHeight))
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return newImage!
     }
 }
 
